@@ -13,30 +13,47 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getFanHighlight, updateFanHighlights } from "@/lib/fanHighlights";
+import { updateFanHighlights } from "@/lib/FanHighlights/actions";
+import { getFanHighlight } from "@/lib/FanHighlights/data";
+import { FanHighlights } from "@/lib/FanHighlights/definitions";
+import { getErrorMessage } from "@/lib/utils";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DocumentData } from "firebase/firestore";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const formSchema = z.object({
-  src: z.string().min(1, "Video link is required"),
-  status: z.enum(["active", "draft"]),
+  src: z
+    .string()
+    .min(10, "Please use a youtube linnk")
+    .optional()
+    .refine(
+      (link) => link === undefined || link.length >= 10,
+      "Please use a youtube link"
+    ),
+  status: z.enum(["active", "draft"]).optional(),
 });
 
 export default function edit({ params }: { params: { id: string } }) {
   const { id } = params;
-  const router = useRouter();
-  const [highlight, setHighlight] = useState<DocumentData | null>(null);
+  const [highlight, setHighlight] = useState<FanHighlights | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   useEffect(() => {
     const fetchHighlight = async () => {
+      setIsNotFound(false);
       try {
-        const fetchedHighlight = await getFanHighlight(id);
-        setHighlight(fetchedHighlight);
+        const highlight: FanHighlights | null = await getFanHighlight(id);
+        if (!highlight) {
+          setIsNotFound(true);
+        } else {
+          setHighlight(highlight);
+        }
       } catch (error) {
         console.error("Error fetching highlight:", error);
       }
@@ -45,17 +62,16 @@ export default function edit({ params }: { params: { id: string } }) {
     fetchHighlight();
   }, [id]);
 
+  if (isNotFound) {
+    notFound();
+  }
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: highlight
-      ? {
-          src: highlight.src,
-          status: highlight.title,
-        }
-      : {
-          src: "",
-          status: "active",
-        },
+    defaultValues: {
+      src: highlight?.src,
+      status: highlight?.status,
+    },
   });
 
   const handleSubmit = async (
@@ -64,16 +80,20 @@ export default function edit({ params }: { params: { id: string } }) {
   ) => {
     console.log({ values });
     const formData = new FormData();
-    formData.append("src", values.src);
-    formData.append("status", values.status);
+    if (values.src) {
+      formData.append("src", values.src);
+    }
 
+    if (values.status) {
+      formData.append("status", values.status);
+    }
+
+    toast.info("Saving changes");
     try {
-      if (highlight) {
-        await updateFanHighlights(id, formData);
-      }
-      router.push("/dashboard/fan-highlights");
+      await updateFanHighlights(id, formData);
+      toast.success("Highlight Updated");
     } catch (error) {
-      console.error("Error submitting fan highlight:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 

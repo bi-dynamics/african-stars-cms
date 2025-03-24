@@ -10,7 +10,7 @@ export default function page() {
   }
   return (
     <div>
-      <button onClick={() => signOut(auth)}>sign out</button>
+      <h1 className="text-3xl font-bold">Welcome, {user.displayName}</h1>
     </div>
   );
 }

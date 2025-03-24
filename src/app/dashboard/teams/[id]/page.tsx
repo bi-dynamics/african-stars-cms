@@ -16,19 +16,19 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
-import {
-  createFeaturedNews,
-  getArticle,
-  updateFeaturedNews,
-} from "@/lib/featuredNews";
+import { notFound, useRouter } from "next/navigation";
+
 import { useEffect, useState } from "react";
 import { DocumentData } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { getTeam, updateTeam } from "@/lib/teams";
+import { Teams } from "@/lib/Teams/definitions";
+import { getTeam } from "@/lib/Teams/data";
+import { updateTeam } from "@/lib/Teams/actions";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 const formSchema = z.object({
   image: z
@@ -38,63 +38,62 @@ const formSchema = z.object({
       "Your picture must be less than 2MB."
     )
     .optional(),
-  name: z.string().min(1, "Team name is required"),
+  name: z.string().min(1, "Team name is required").optional(),
 });
 
 export default function edit({ params }: { params: { id: string } }) {
   const { id } = params;
-  const router = useRouter();
-  const [team, setTeam] = useState<DocumentData | null>(null);
+  const [team, setTeam] = useState<Teams | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   useEffect(() => {
     const fetchTeam = async () => {
+      setIsNotFound(false);
       try {
-        const fetchedTeam = await getTeam(id);
-        setTeam(fetchedTeam);
+        const team: Teams | null = await getTeam(id);
+        if (!team) {
+          setIsNotFound(true);
+        } else {
+          setTeam(team);
+        }
       } catch (error) {
-        console.error("Error fetching team:", error);
-        // Handle error state
+        console.error(error);
       }
     };
 
     fetchTeam();
   }, [id]);
 
+  if (isNotFound) {
+    notFound();
+  }
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: team
-      ? {
-          image: team.image,
-          name: team.name,
-        }
-      : {
-          image: undefined,
-          name: "",
-        },
+    defaultValues: {
+      image: undefined,
+      name: team?.name,
+    },
   });
 
   const handleSubmit = async (
     id: string,
     values: z.infer<typeof formSchema>
   ) => {
-    console.log({ values });
     const formData = new FormData();
     if (values.name) {
       formData.append("name", values.name);
     }
-
     if (values.image) {
       formData.append("image", values.image);
     }
 
+    toast.info("Saving changes");
     try {
-      if (team) {
-        await updateTeam(id, formData);
-      }
-      router.push("/dashboard/featured-news");
+      await updateTeam(id, formData);
+      toast.success("Team Updated");
     } catch (error) {
-      // Handle submission error (e.g., display error message to the user)
-      console.error("Error submitting featured news:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -135,9 +134,6 @@ export default function edit({ params }: { params: { id: string } }) {
                   <FormControl>
                     <Input
                       type="file"
-                      placeholder={
-                        team?.image ? "Change image" : "No file chosen"
-                      }
                       {...fieldProps}
                       accept="image/*"
                       onChange={(event) =>
@@ -147,7 +143,7 @@ export default function edit({ params }: { params: { id: string } }) {
                     />
                   </FormControl>
                   <FormDescription>
-                    {team && (
+                    {team && team.image_url && (
                       <Image
                         src={team?.image_url}
                         alt="Team Picture"
@@ -156,7 +152,9 @@ export default function edit({ params }: { params: { id: string } }) {
                         className="w-20 h-20"
                       />
                     )}
-                    Current team logo
+                    {team && team.image_url
+                      ? "Current team logo"
+                      : "Upload a logo"}
                   </FormDescription>
 
                   <FormMessage />

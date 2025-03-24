@@ -15,24 +15,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import Team from "./team";
-import { FeaturedNewsData, getFeaturedNews } from "@/lib/featuredNews";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { getTeams, TeamsData } from "@/lib/teams";
+import { getTeams } from "@/lib/Teams/data";
+import { Teams } from "@/lib/Teams/definitions";
+import { deleteTeam } from "@/lib/Teams/actions";
 
 export default function TeamsTable() {
-  const router = useRouter();
-  const [teams, setTeams] = useState<TeamsData[]>([]);
+  const [teams, setTeams] = useState<Teams[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [refresh, setRefresh] = useState(false);
 
   useEffect(() => {
     fetchTeams();
-    console.log("pageloaded");
-  }, []);
+  }, [refresh]);
 
   const fetchTeams = async () => {
     if (isLoading) return;
@@ -48,6 +47,21 @@ export default function TeamsTable() {
     }
 
     setIsLoading(false);
+  };
+
+  const handleDeleteTeam = async (id: string) => {
+    toast.info("Deleting team");
+    try {
+      const result = await deleteTeam(id);
+      if (result.success) {
+        toast.success("Team deleted");
+        setRefresh((prev) => !prev);
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("An unexpected error occured.");
+    }
   };
 
   return (
@@ -78,11 +92,7 @@ export default function TeamsTable() {
           </TableHeader>
           <TableBody>
             {teams.map((team) => (
-              <Team
-                key={team.id}
-                team={team}
-                // onDelete={deleteFeaturedNews}
-              />
+              <Team key={team.id} team={team} onDelete={handleDeleteTeam} />
             ))}
           </TableBody>
         </Table>

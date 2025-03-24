@@ -21,23 +21,26 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { FanHighlightsData, getFanHighlights } from "@/lib/fanHighlights";
+
 import Highlight from "./highlight";
+import { FanHighlights } from "@/lib/FanHighlights/definitions";
+import { getFanHighlights } from "@/lib/FanHighlights/data";
+import { deleteFanHighlight } from "@/lib/FanHighlights/actions";
 
 export default function HighlightsTable() {
   const router = useRouter();
-  const [fanHighlights, setFanHighlights] = useState<FanHighlightsData[]>([]);
+  const [fanHighlights, setFanHighlights] = useState<FanHighlights[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true); // Track if there are more pages
   const [hasPrevious, setHasPrevious] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [refresh, setRefresh] = useState(false);
 
   useEffect(() => {
-    fetchData();
-    console.log("pageloaded");
-  }, []);
+    fetchHighlights();
+  }, [refresh]);
 
-  const fetchData = async (
+  const fetchHighlights = async (
     nextPage: boolean = false,
     prevPage: boolean = false,
     currentPage: number = 1
@@ -71,13 +74,28 @@ export default function HighlightsTable() {
   const loadMoreHighlights = async () => {
     const newCurrentPage = currentPage + 1;
     setCurrentPage(newCurrentPage);
-    fetchData(true, false, newCurrentPage);
+    fetchHighlights(true, false, newCurrentPage);
   };
 
   const loadPreviousHighlights = async () => {
     const newCurrentPage = currentPage - 1;
     setCurrentPage(newCurrentPage);
-    fetchData(false, true, newCurrentPage);
+    fetchHighlights(false, true, newCurrentPage);
+  };
+
+  const handleDeleteFanHighlight = async (id: string) => {
+    toast.info("Deleting highlight");
+    try {
+      const result = await deleteFanHighlight(id);
+      if (result.success) {
+        toast.success("Highlight deleted");
+        setRefresh((prev) => !prev);
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("An unexpected error occured.");
+    }
   };
 
   return (
@@ -113,7 +131,7 @@ export default function HighlightsTable() {
             {fanHighlights.length === 0 && (
               <TableRow className="border w-full">
                 <TableCell colSpan={5}>
-                  No more fan highlights available. Get started by clicking{" "}
+                  No fan highlights available. Get started by clicking{" "}
                   <strong>'Add New Video'</strong>
                 </TableCell>
               </TableRow>
@@ -122,7 +140,7 @@ export default function HighlightsTable() {
               <Highlight
                 key={highlight.id}
                 highlight={highlight}
-                // onDelete={deleteFeaturedNews}
+                onDelete={handleDeleteFanHighlight}
               />
             ))}
           </TableBody>

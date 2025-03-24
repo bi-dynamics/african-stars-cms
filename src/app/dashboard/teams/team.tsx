@@ -10,18 +10,16 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import { FeaturedNewsData } from "@/lib/featuredNews";
-import { toast } from "sonner";
-import { deleteFeaturedNews } from "@/lib/actions";
 import Link from "next/link";
-import { TeamsData } from "@/lib/teams";
+import { Teams } from "@/lib/Teams/definitions";
 
-export default function Team({ team }: { team: TeamsData }) {
-  const handleDelete = async (teamId: string) => {
-    await deleteFeaturedNews(teamId).then(() => {
-      location.reload();
-    });
-    toast.success("Article deleted successfully");
+interface TeamProps {
+  team: Teams;
+  onDelete: (id: string) => void;
+}
+export default function Team({ team, onDelete }: TeamProps) {
+  const handleDelete = () => {
+    onDelete(team.id);
   };
 
   return (
@@ -51,9 +49,7 @@ export default function Team({ team }: { team: TeamsData }) {
             <Link href={`/dashboard/teams/${team.id}`}>
               <DropdownMenuItem>Edit</DropdownMenuItem>
             </Link>
-            <DropdownMenuItem onClick={() => handleDelete(team.id)}>
-              Delete
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

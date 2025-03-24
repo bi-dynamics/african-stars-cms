@@ -10,17 +10,17 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import { FeaturedNewsData } from "@/lib/featuredNews";
-import { toast } from "sonner";
-import { deleteFeaturedNews } from "@/lib/actions";
 import Link from "next/link";
+import { FeaturedNews } from "@/lib/FeaturedNews/definitions";
 
-export default function Article({ article }: { article: FeaturedNewsData }) {
-  const handleDelete = async (articleId: string) => {
-    await deleteFeaturedNews(articleId).then(() => {
-      location.reload();
-    });
-    toast.success("Article deleted successfully");
+interface ArticleProps {
+  article: FeaturedNews;
+  onDelete: (id: string) => void;
+}
+
+export default function Article({ article, onDelete }: ArticleProps) {
+  const handleDelete = () => {
+    onDelete(article.id);
   };
 
   return (
@@ -58,9 +58,7 @@ export default function Article({ article }: { article: FeaturedNewsData }) {
             <Link href={`/dashboard/featured-news/${article.id}`}>
               <DropdownMenuItem>Edit</DropdownMenuItem>
             </Link>
-            <DropdownMenuItem onClick={() => handleDelete(article.id)}>
-              Delete
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

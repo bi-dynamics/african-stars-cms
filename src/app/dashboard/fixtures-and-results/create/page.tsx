@@ -16,10 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
-import { createFeaturedNews } from "@/lib/featuredNews";
 import Link from "next/link";
-import { createFixture } from "@/lib/fixtures";
 import {
   Select,
   SelectContent,
@@ -28,17 +25,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-import { getTeams, TeamsData } from "@/lib/teams";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { cn, getErrorMessage } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Teams } from "@/lib/Teams/definitions";
+import { getTeams } from "@/lib/Teams/data";
+import { toast } from "sonner";
+import { createFixture } from "@/lib/Fixtures/actions";
 
 const formSchema = z.object({
   away_team_id: z.string(),
@@ -57,8 +57,7 @@ const formSchema = z.object({
 });
 
 export default function create() {
-  const router = useRouter();
-  const [teams, setTeams] = useState<TeamsData[]>([]);
+  const [teams, setTeams] = useState<Teams[]>([]);
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -93,7 +92,6 @@ export default function create() {
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log({ values });
     const formData = new FormData();
     formData.append("away_team_id", values.away_team_id);
     formData.append("home_team_id", values.home_team_id);
@@ -118,11 +116,10 @@ export default function create() {
     formData.append("status", values.status);
 
     try {
-      //   await createFixture(formData);
-      //   router.push("/dashboard/fixtures-and-results");
+      await createFixture(formData);
+      toast.success(`New Fixture saved as ${values.status}`);
     } catch (error) {
-      // Handle submission error (e.g., display error message to the user)
-      console.error("Error submitting featured news:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -335,6 +332,37 @@ export default function create() {
                                     {hour}
                                   </Button>
                                 ))}
+                            </div>
+                            <ScrollBar
+                              orientation="horizontal"
+                              className="sm:hidden"
+                            />
+                          </ScrollArea>
+                          <ScrollArea className="w-64 sm:w-auto">
+                            <div className="flex sm:flex-col p-2">
+                              {Array.from({ length: 12 }, (_, i) => i * 5).map(
+                                (minute) => (
+                                  <Button
+                                    key={minute}
+                                    size="icon"
+                                    variant={
+                                      field.value &&
+                                      field.value.getMinutes() === minute
+                                        ? "default"
+                                        : "ghost"
+                                    }
+                                    className="sm:w-full shrink-0 aspect-square"
+                                    onClick={() =>
+                                      handleTimeChange(
+                                        "minute",
+                                        minute.toString()
+                                      )
+                                    }
+                                  >
+                                    {minute.toString().padStart(2, "0")}
+                                  </Button>
+                                )
+                              )}
                             </div>
                             <ScrollBar
                               orientation="horizontal"

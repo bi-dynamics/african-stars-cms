@@ -10,14 +10,17 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import { toast } from "sonner";
-import { deleteFeaturedNews } from "@/lib/actions";
 import Link from "next/link";
-import { FixturesData } from "@/lib/fixtures";
 import { DocumentReference, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { Fixtures } from "@/lib/Fixtures/definitions";
 
-export default function Fixture({ fixture }: { fixture: FixturesData }) {
+interface FixtureProps {
+  fixture: Fixtures;
+  onDelete: (id: string) => void;
+}
+
+export default function Fixture({ fixture, onDelete }: FixtureProps) {
   const [homeTeamData, setHomeTeamData] = useState<{
     name: string;
     logo: string;
@@ -58,11 +61,8 @@ export default function Fixture({ fixture }: { fixture: FixturesData }) {
     }
   }, [fixture.home_team_id, fixture.away_team_id]); // Only re-run the effect if the fixture IDs change
 
-  const handleDelete = async (teamId: string) => {
-    await deleteFeaturedNews(teamId).then(() => {
-      location.reload();
-    });
-    toast.success("Fixture deleted successfully");
+  const handleDelete = () => {
+    onDelete(fixture.id);
   };
 
   return (
@@ -125,9 +125,7 @@ export default function Fixture({ fixture }: { fixture: FixturesData }) {
             <Link href={`/dashboard/fixtures/${fixture.id}`}>
               <DropdownMenuItem>Edit</DropdownMenuItem>
             </Link>
-            <DropdownMenuItem onClick={() => handleDelete(fixture.id)}>
-              Delete
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

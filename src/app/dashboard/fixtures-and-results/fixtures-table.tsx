@@ -20,21 +20,21 @@ import Fixture from "./fixture";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { FixturesData, getFixtures } from "@/lib/fixtures";
+import { deleteFixture } from "@/lib/Fixtures/actions";
+import { Fixtures } from "@/lib/Fixtures/definitions";
+import { getFixtures } from "@/lib/Fixtures/data";
 
 export default function FixturesTable() {
-  const router = useRouter();
-  const [fixtures, setFixtures] = useState<FixturesData[]>([]);
+  const [fixtures, setFixtures] = useState<Fixtures[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true); // Track if there are more pages
   const [hasPrevious, setHasPrevious] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [refresh, setRefresh] = useState(false);
 
   useEffect(() => {
     fetchFixtures();
-    console.log("pageloaded");
-  }, []);
+  }, [refresh]);
 
   const fetchFixtures = async (
     nextPage: boolean = false,
@@ -57,7 +57,7 @@ export default function FixturesTable() {
       setFixtures(fixtures); // replace existing articles with new ones
 
       // Check for hasPrevious and hasMore based on the number of articles fetched
-      console.log("currentpage for fetch" + currentPage);
+
       setHasPrevious(currentPage > 1);
       setHasMore(fixtures.length === 5);
     } else {
@@ -77,6 +77,21 @@ export default function FixturesTable() {
     const newCurrentPage = currentPage - 1;
     setCurrentPage(newCurrentPage);
     fetchFixtures(false, true, newCurrentPage);
+  };
+
+  const handleDeleteFixture = async (id: string) => {
+    toast.info("Deleting fixture");
+    try {
+      const result = await deleteFixture(id);
+      if (result.success) {
+        toast.success("Fixture deleted");
+        setRefresh((prev) => !prev);
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("An unexpected error occured.");
+    }
   };
 
   return (
@@ -117,7 +132,7 @@ export default function FixturesTable() {
               <Fixture
                 key={fixture.id}
                 fixture={fixture}
-                // onDelete={deleteFeaturedNews}
+                onDelete={handleDeleteFixture}
               />
             ))}
           </TableBody>

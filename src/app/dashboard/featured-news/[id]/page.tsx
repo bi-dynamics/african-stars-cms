@@ -1,10 +1,10 @@
 "use client";
-
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
   Form,
   FormField,
@@ -16,18 +16,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
-import {
-  createFeaturedNews,
-  getArticle,
-  updateFeaturedNews,
-} from "@/lib/featuredNews";
-import { useEffect, useState } from "react";
-import { DocumentData } from "firebase/firestore";
-import Image from "next/image";
 import Link from "next/link";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { FeaturedNews } from "@/lib/FeaturedNews/definitions";
+import { getArticle } from "@/lib/FeaturedNews/data";
+import { notFound } from "next/navigation";
+import { useEffect, useState } from "react";
+import { updateFeaturedNews } from "@/lib/FeaturedNews/actions";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 const formSchema = z.object({
   picture: z
@@ -41,86 +38,83 @@ const formSchema = z.object({
     .string()
     .optional()
     .refine(
-      (title) => !title || title.length >= 1,
+      (title) => title === undefined || title.length >= 1,
       "Cannot change title to blank"
     ),
   description: z
     .string()
     .optional()
     .refine(
-      (title) => !title || title.length >= 1,
+      (title) => title === undefined || title.length >= 1,
       "Cannot change title to blank"
     ),
-  status: z.enum(["active", "draft"]),
+  status: z.enum(["active", "draft"]).optional(),
 });
 
 export default function edit({ params }: { params: { id: string } }) {
   const { id } = params;
-  const router = useRouter();
-  const [article, setArticle] = useState<DocumentData | null>(null);
-
+  const [article, setArticle] = useState<FeaturedNews | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
   useEffect(() => {
     const fetchArticle = async () => {
+      setIsNotFound(false);
       try {
-        const fetchedArticle = await getArticle(id);
-        setArticle(fetchedArticle);
+        const article: FeaturedNews | null = await getArticle(id);
+        if (!article) {
+          setIsNotFound(true);
+        } else {
+          setArticle(article);
+        }
       } catch (error) {
-        console.error("Error fetching article:", error);
-        // Handle error state
+        console.error(error);
       }
     };
-
     fetchArticle();
   }, [id]);
 
+  if (isNotFound) {
+    notFound();
+  }
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: article
-      ? {
-          picture: undefined,
-          title: article.title,
-          description: article.description,
-          status: article.status,
-        }
-      : {
-          picture: undefined,
-          title: "",
-          description: "",
-          status: "active",
-        },
+    defaultValues: {
+      picture: undefined,
+      title: article?.title,
+      description: article?.description,
+      status: article?.status,
+    },
   });
 
   const handleSubmit = async (
     id: string,
     values: z.infer<typeof formSchema>
   ) => {
-    console.log({ values });
     const formData = new FormData();
-    if (values.title) {
+
+    if (values.title && values.title !== article?.title) {
       formData.append("title", values.title);
     }
-    if (values.description) {
+    if (values.description && values.description !== article?.description) {
       formData.append("description", values.description);
     }
     if (values.picture) {
       formData.append("picture", values.picture);
     }
-    if (values.status !== undefined) {
+    if (values.status && values.status !== article?.status) {
       formData.append("status", values.status);
     }
 
+    toast.info("Saving changes");
     try {
-      if (article) {
-        await updateFeaturedNews(id, formData);
-      }
-      router.push("/dashboard/featured-news");
+      await updateFeaturedNews(id, formData);
+      toast.success("Article Updated");
     } catch (error) {
-      // Handle submission error (e.g., display error message to the user)
-      console.error("Error submitting featured news:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
-  const handleUpdate = handleSubmit.bind(null, id);
+  const handleSubmitWithId = handleSubmit.bind(null, id);
 
   return (
     <Card>
@@ -130,7 +124,7 @@ export default function edit({ params }: { params: { id: string } }) {
       <CardContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleUpdate)}
+            onSubmit={form.handleSubmit(handleSubmitWithId)}
             className="space-y-8 w-full"
           >
             <FormField
@@ -185,15 +179,17 @@ export default function edit({ params }: { params: { id: string } }) {
                       }
                     />
                   </FormControl>
-                  <FormDescription>
-                    <Image
-                      src={article?.picture}
-                      alt="Article Picture"
-                      width={128}
-                      height={128}
-                      className="w-20 h-20"
-                    />
-                  </FormDescription>
+                  {article?.picture && (
+                    <FormDescription>
+                      <Image
+                        src={article.picture}
+                        alt="Article Picture"
+                        width={128}
+                        height={128}
+                        className="w-20 h-20"
+                      />
+                    </FormDescription>
+                  )}
 
                   <FormMessage />
                 </FormItem>

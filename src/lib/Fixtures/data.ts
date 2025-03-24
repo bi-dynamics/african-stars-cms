@@ -1,34 +1,15 @@
 import { db } from "@/app/firebase/config";
 import {
-  addDoc,
-  collection,
-  DocumentReference,
   DocumentSnapshot,
+  collection,
+  query,
+  orderBy,
+  limit,
+  startAfter,
   endBefore,
   getDocs,
-  limit,
-  orderBy,
-  query,
-  startAfter,
-  Timestamp,
 } from "firebase/firestore";
-
-export interface FixturesData {
-  id: string;
-  away_team_id: DocumentReference;
-  home_team_id: DocumentReference;
-  scores?: {
-    home: number;
-    away: number;
-  };
-  match_date: Timestamp;
-  match_info: {
-    competitionStage: string;
-    league: string;
-    leg: string;
-  };
-  status: string;
-}
+import { Fixtures } from "./definitions";
 
 let lastDocumentSnapshot: DocumentSnapshot | null = null; //stores the last document fetched from previous query
 let firstDocumentSnapshot: DocumentSnapshot | null = null; //stores the first document of the current page
@@ -36,7 +17,7 @@ let firstDocumentSnapshot: DocumentSnapshot | null = null; //stores the first do
 export async function getFixtures(
   nextPage: boolean = false,
   prevPage: boolean = false
-): Promise<FixturesData[]> {
+): Promise<Fixtures[]> {
   const ref = collection(db, "live_matches");
   let q = query(ref, orderBy("match_date", "desc"), limit(5));
 
@@ -62,7 +43,7 @@ export async function getFixtures(
   try {
     const querySnapshot = await getDocs(q);
 
-    const fixtures: FixturesData[] = [];
+    const fixtures: Fixtures[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       fixtures.push({
@@ -94,48 +75,7 @@ export async function getFixtures(
 
     return fixtures;
   } catch (error) {
-    console.error("Error fetching fixtures:", error);
-    return [];
-  }
-}
-
-export async function createFixture(formData: FormData): Promise<void> {
-  try {
-    const data = Object.fromEntries(formData);
-    const {
-      away_team_id,
-      home_team_id,
-      "scores[home]": homeScore,
-      "scores[away]": awayScore,
-      match_date,
-      "match_info[competitionStage]": competitionStage,
-      "match_info[league]": league,
-      "match_info[leg]": leg,
-      status,
-    } = data;
-
-    const scores = {
-      home: parseInt(homeScore.toString()),
-      away: parseInt(awayScore.toString()),
-    };
-
-    const matchInfo = {
-      competitionStage,
-      league,
-      leg,
-    };
-
-    await addDoc(collection(db, "live_matches"), {
-      away_team_id,
-      home_team_id,
-      scores,
-      match_date,
-      //add match_date conversion
-      match_info: matchInfo,
-      status,
-    });
-  } catch (error) {
-    console.error("Error creating fixture:", error);
-    throw error;
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch fixtures data");
   }
 }

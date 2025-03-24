@@ -22,9 +22,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import { createFeaturedNews } from "@/lib/featuredNews";
 import Link from "next/link";
-import { createFanHighlights } from "@/lib/fanHighlights";
+import { createFanHighlights } from "@/lib/FanHighlights/actions";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 const formSchema = z.object({
   src: z.string().min(1, "Video link is required"),
@@ -48,11 +49,14 @@ export default function create() {
     formData.append("src", values.src);
     formData.append("status", values.status);
 
+    toast.info(
+      values.status === "active" ? "Publishing highlight" : "Saving as draft"
+    );
     try {
       await createFanHighlights(formData);
-      router.push("/dashboard/fan-highlights");
+      toast.success(`Fan Highlight saved as ${values.status}`);
     } catch (error) {
-      console.error("Error submitting fan highlight:", error);
+      console.error(getErrorMessage(error));
     }
   };
 

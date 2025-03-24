@@ -17,24 +17,27 @@ import {
 } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import Article from "./article";
-import { FeaturedNewsData, getFeaturedNews } from "@/lib/featuredNews";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getFeaturedNews } from "@/lib/FeaturedNews/data";
+import { deleteFeaturedNews } from "@/lib/FeaturedNews/actions";
+import { FeaturedNews } from "@/lib/FeaturedNews/definitions";
 
 export default function NewsTable() {
   const router = useRouter();
-  const [featuredNews, setFeaturedNews] = useState<FeaturedNewsData[]>([]);
+  const [featuredNews, setFeaturedNews] = useState<FeaturedNews[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true); // Track if there are more pages
   const [hasPrevious, setHasPrevious] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [refresh, setRefresh] = useState(false);
 
   useEffect(() => {
     fetchArticles();
-    console.log("pageloaded");
-  }, []);
+  }, [refresh]);
 
   const fetchArticles = async (
     nextPage: boolean = false,
@@ -79,6 +82,20 @@ export default function NewsTable() {
     fetchArticles(false, true, newCurrentPage);
   };
 
+  const handleDeleteFeaturedNews = async (id: string) => {
+    toast.info("Deleting article");
+    try {
+      const result = await deleteFeaturedNews(id);
+      if (result.success) {
+        toast.success("Article deleted");
+        setRefresh((prev) => !prev);
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("An unexpected error occured.");
+    }
+  };
   return (
     <Card>
       <CardHeader className="flex flex-row w-full justify-between items-center">
@@ -113,7 +130,7 @@ export default function NewsTable() {
               <Article
                 key={article.id}
                 article={article}
-                // onDelete={deleteFeaturedNews}
+                onDelete={handleDeleteFeaturedNews}
               />
             ))}
           </TableBody>

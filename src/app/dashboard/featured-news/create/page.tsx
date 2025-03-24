@@ -16,8 +16,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import { createFeaturedNews } from "@/lib/featuredNews";
 import Link from "next/link";
+import { createFeaturedNews } from "@/lib/FeaturedNews/actions";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 const formSchema = z.object({
   picture: z
@@ -33,8 +35,6 @@ const formSchema = z.object({
 });
 
 export default function create() {
-  const router = useRouter();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -46,7 +46,6 @@ export default function create() {
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log({ values });
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("description", values.description);
@@ -55,20 +54,22 @@ export default function create() {
     }
     formData.append("status", values.status);
 
+    toast.info(
+      values.status === "active" ? "Publishing article" : "Saving as draft"
+    );
     try {
       await createFeaturedNews(formData);
-
-      router.push("/dashboard/featured-news");
+      toast.success(`New Article saved as ${values.status}`);
     } catch (error) {
-      // Handle submission error (e.g., display error message to the user)
-      console.error("Error submitting featured news:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
-  const handleSaveDraft = handleSubmit.bind(null, {
-    ...form.getValues(),
-    status: "draft",
-  });
+  const handleSaveDraft = () => {
+    form.handleSubmit((values) => {
+      handleSubmit({ ...values, status: "draft" });
+    })();
+  };
 
   return (
     <Card>

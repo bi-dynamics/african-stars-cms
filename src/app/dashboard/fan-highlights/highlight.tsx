@@ -7,18 +7,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { FanHighlightsData } from "@/lib/fanHighlights";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { FanHighlights } from "@/lib/FanHighlights/definitions";
 
-export default function Highlight({
-  highlight,
-}: {
-  highlight: FanHighlightsData;
-}) {
+interface HighlightProps {
+  highlight: FanHighlights;
+  onDelete: (id: string) => void;
+}
+export default function Highlight({ highlight, onDelete }: HighlightProps) {
   const [videoTitle, setVideoTitle] = useState("");
   const [videoThumbnail, setVideoThumbnail] = useState("");
 
@@ -40,6 +40,10 @@ export default function Highlight({
 
     fetchVideoDetails();
   }, [highlight.src]);
+
+  const handleDelete = () => {
+    onDelete(highlight.id);
+  };
   return (
     <TableRow>
       <TableCell className="w-40">
@@ -73,7 +77,7 @@ export default function Highlight({
             <Link href={`/dashboard/fan-highlights/${highlight.id}`}>
               <DropdownMenuItem>Edit</DropdownMenuItem>
             </Link>
-            <DropdownMenuItem>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

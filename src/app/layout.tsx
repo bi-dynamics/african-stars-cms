@@ -32,6 +32,7 @@ export default function RootLayout({
         <main>{children}</main>
 
         <Toaster
+          position="top-right"
           toastOptions={{
             classNames: {
               toast: "bg-white",
