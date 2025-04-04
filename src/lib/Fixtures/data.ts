@@ -8,6 +8,8 @@ import {
   startAfter,
   endBefore,
   getDocs,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import { Fixtures } from "./definitions";
 
@@ -19,7 +21,7 @@ export async function getFixtures(
   prevPage: boolean = false
 ): Promise<Fixtures[]> {
   const ref = collection(db, "live_matches");
-  let q = query(ref, orderBy("match_date", "desc"), limit(5));
+  let q = query(ref, orderBy("match_date", "desc"), limit(10));
 
   if (nextPage && lastDocumentSnapshot) {
     // If it's the next page, start after the last document of the previous page
@@ -27,7 +29,7 @@ export async function getFixtures(
       ref,
       orderBy("match_date", "desc"),
       startAfter(lastDocumentSnapshot),
-      limit(5)
+      limit(10)
     );
   }
 
@@ -36,7 +38,7 @@ export async function getFixtures(
       ref,
       orderBy("match_date", "desc"),
       endBefore(firstDocumentSnapshot),
-      limit(5)
+      limit(10)
     );
   }
 
@@ -62,6 +64,14 @@ export async function getFixtures(
           leg: data.match_info.leg,
         },
         status: data.status,
+        home_team: {
+          name: "",
+          logo: "",
+        },
+        away_team: {
+          name: "",
+          logo: "",
+        },
       });
     });
 
@@ -77,5 +87,20 @@ export async function getFixtures(
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch fixtures data");
+  }
+}
+
+export async function getFixture(id: string) {
+  try {
+    const docRef = doc(db, "live_matches", id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data() as Fixtures;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    throw new Error("Failed to fetch fixture");
   }
 }

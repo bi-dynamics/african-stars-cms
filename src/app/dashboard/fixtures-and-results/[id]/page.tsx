@@ -1,21 +1,25 @@
 "use client";
 
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
+  FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -23,42 +27,58 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEffect, useState } from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn, getErrorMessage } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Teams } from "@/lib/Teams/definitions";
+import { updateFixture } from "@/lib/Fixtures/actions";
+import { getFixture } from "@/lib/Fixtures/data";
+import { Fixtures } from "@/lib/Fixtures/definitions";
 import { getTeams } from "@/lib/Teams/data";
+import { Teams } from "@/lib/Teams/definitions";
+import { cn, getErrorMessage } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { createFixture } from "@/lib/Fixtures/actions";
+import { z } from "zod";
 
 const formSchema = z.object({
-  away_team_id: z.string().min(1, "Away team is required"),
-  home_team_id: z.string().min(1, "Home team is required"),
+  away_team_id: z.string().min(1, "Away team is required").optional(),
+  home_team_id: z.string().min(1, "Home team is required").optional(),
   match_date: z.date().optional(),
   match_info: z.object({
-    competitionStage: z.string().min(1, "Stage is required"),
-    league: z.string().min(1, "League is required"),
-    leg: z.string().optional(),
+    competitionStage: z.string().min(1, "Stage is required").optional(),
+    league: z.string().min(1, "League is required").optional(),
+    leg: z.string().optional().optional(),
   }),
   scores: z.object({
     home: z.number().min(0, "Home score must be 0 or greater").optional(),
     away: z.number().min(0, "Away score must be 0 or greater").optional(),
   }),
-  status: z.enum(["active", "draft"]),
+  status: z.enum(["active", "draft"]).optional(),
 });
 
-export default function create() {
+export default function page({ params }: { params: { id: string } }) {
+  const { id } = params;
+  const [fixture, setFixture] = useState<Fixtures | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
   const [teams, setTeams] = useState<Teams[]>([]);
 
   useEffect(() => {
+    const fetchFixture = async () => {
+      setIsNotFound(false);
+      try {
+        const fixture: Fixtures | null = await getFixture(id);
+        if (!fixture) {
+          setIsNotFound(true);
+        } else {
+          setFixture(fixture);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
     const fetchTeams = async () => {
       try {
         const fetchedTeams = await getTeams();
@@ -68,64 +88,100 @@ export default function create() {
       }
     };
 
+    fetchFixture();
     fetchTeams();
-  }, []);
+  }, [id]);
+
+  if (isNotFound) {
+    notFound();
+  }
+
+  const getTeamName = (teamId: string | undefined): string => {
+    if (!teamId || !teams) return "";
+    const team = teams.find((t) => t.id === teamId);
+    return team ? team.name : "";
+  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      away_team_id: "",
-      home_team_id: "",
-      match_date: undefined,
+      away_team_id: fixture?.away_team_id,
+      home_team_id: fixture?.home_team_id,
+      match_date: fixture?.match_date?.toDate() || undefined,
       match_info: {
-        competitionStage: "",
-        league: "",
-        leg: "",
+        competitionStage: fixture?.match_info.competitionStage,
+        league: fixture?.match_info.league,
+        leg: fixture?.match_info.leg,
       },
       scores: {
-        home: 0,
-        away: 0,
+        home: fixture?.scores?.home,
+        away: fixture?.scores?.away,
       },
-      status: "active",
+      status: fixture?.status,
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (
+    id: string,
+    values: z.infer<typeof formSchema>
+  ) => {
     const formData = new FormData();
-    formData.append("away_team_id", values.away_team_id);
-    formData.append("home_team_id", values.home_team_id);
-    if (values.match_date) {
+
+    if (values.away_team_id && values.away_team_id !== fixture?.away_team_id) {
+      formData.append("away_team_id", values.away_team_id);
+    }
+    if (values.home_team_id && values.home_team_id !== fixture?.home_team_id) {
+      formData.append("home_team_id", values.home_team_id);
+    }
+    if (
+      values.match_date &&
+      values.match_date !== fixture?.match_date.toDate()
+    ) {
       formData.append("match_date", values.match_date.toISOString());
     }
-    formData.append(
-      "match_info[competitionStage]",
-      values.match_info.competitionStage
-    );
-    formData.append("match_info[league]", values.match_info.league);
-    if (values.match_info.leg) {
+    if (
+      values.match_info.competitionStage &&
+      values.match_info.competitionStage !==
+        fixture?.match_info.competitionStage
+    ) {
+      formData.append(
+        "match_info[competitionStage]",
+        values.match_info.competitionStage
+      );
+    }
+    if (
+      values.match_info.league &&
+      values.match_info.league !== fixture?.match_info.league
+    ) {
+      formData.append("match_info[league]", values.match_info.league);
+    }
+    if (
+      values.match_info.leg &&
+      values.match_info.leg !== fixture?.match_info.leg
+    ) {
       formData.append("match_info[leg]", values.match_info.leg);
     }
-    if (values.scores?.home) {
+    if (values.scores?.home && values.scores.home !== fixture?.scores?.home) {
       formData.append("scores[home]", values.scores.home.toString());
     }
-    if (values.scores?.away) {
+    if (values.scores?.away && values.scores.away !== fixture?.scores?.away) {
       formData.append("scores[away]", values.scores.away.toString());
     }
 
-    formData.append("status", values.status);
+    if (values.status && values.status !== fixture?.status)
+      formData.append("status", values.status);
 
+    toast.info("Saving changes");
     try {
-      await createFixture(formData);
-      toast.success(`New Fixture saved as ${values.status}`);
+      console.log(values);
+      await updateFixture(id, formData);
+      toast.success("Fixture Updated");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   };
 
-  const handleSaveDraft = handleSubmit.bind(null, {
-    ...form.getValues(),
-    status: "draft",
-  });
+  const handleSubmitWithId = handleSubmit.bind(null, id);
 
   function handleDateSelect(date: Date | undefined) {
     if (date) {
@@ -145,16 +201,15 @@ export default function create() {
     }
     form.setValue("match_date", newDate);
   }
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create a new fixture</CardTitle>
+        <CardTitle>Update fixture</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(handleSubmitWithId)}
             className="space-y-8 w-full"
           >
             <FormField
@@ -166,7 +221,7 @@ export default function create() {
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="e.g. CAF Champions League"
+                      placeholder={fixture?.match_info.league}
                       {...field}
                     />
                   </FormControl>
@@ -184,7 +239,7 @@ export default function create() {
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="e.g. First Preliminary Round or Round 2"
+                      placeholder={fixture?.match_info.competitionStage}
                       {...field}
                     />
                   </FormControl>
@@ -202,7 +257,7 @@ export default function create() {
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="e.g. First Leg or 1 of 2"
+                      placeholder={fixture?.match_info.leg}
                       {...field}
                     />
                   </FormControl>
@@ -211,7 +266,7 @@ export default function create() {
                 </FormItem>
               )}
             />
-            <div className="flex gap-16">
+            <div className="flex gap-16 bg-gray-50 p-8">
               <FormField
                 control={form.control}
                 name="home_team_id"
@@ -220,13 +275,16 @@ export default function create() {
                     <FormLabel className="font-bold">Home Team</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      defaultValue={fixture?.home_team_id}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a home team to display" />
+                          <SelectValue
+                            placeholder={getTeamName(fixture?.home_team_id)}
+                          />
                         </SelectTrigger>
                       </FormControl>
+                      {fixture?.home_team?.name}
                       <SelectContent>
                         {teams.map((team) => (
                           <SelectItem
@@ -239,17 +297,56 @@ export default function create() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
                     <FormDescription>
                       You can manage your teams in the{" "}
                       <Link href="/dashboard/teams" className="text-red-500">
-                        Teams tab
-                      </Link>
-                      .
+                        Teams
+                      </Link>{" "}
+                      tab.
                     </FormDescription>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
+              <div className="flex gap-2 justify-center items-center">
+                <FormField
+                  control={form.control}
+                  name="scores.home"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder={fixture?.scores?.home.toString()}
+                          {...field}
+                          className="text-4xl font-bold"
+                        />
+                      </FormControl>
+
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <span className="text-2xl font-bold">:</span>
+                <FormField
+                  control={form.control}
+                  name="scores.home"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder={fixture?.scores?.away.toString()}
+                          {...field}
+                          className="text-4xl font-bold"
+                        />
+                      </FormControl>
+
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="away_team_id"
@@ -258,18 +355,22 @@ export default function create() {
                     <FormLabel className="font-bold">Away Team</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      defaultValue={fixture?.away_team_id}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select an away team to display" />
+                          <SelectValue
+                            placeholder={getTeamName(fixture?.away_team_id)}
+                          />
                         </SelectTrigger>
                       </FormControl>
+                      {fixture?.away_team?.name}
                       <SelectContent>
                         {teams.map((team) => (
                           <SelectItem
                             key={team.id}
                             value={team.id}
+                            defaultValue={fixture?.away_team_id}
                             disabled={form.watch("home_team_id") === team.id}
                           >
                             {team.name}
@@ -302,8 +403,15 @@ export default function create() {
                       >
                         {field.value ? (
                           format(field.value, "MM/dd/yyyy HH:mm")
+                        ) : fixture?.match_date ? (
+                          <span>
+                            {format(
+                              fixture?.match_date.toDate(),
+                              "MM/dd/yyy HH:mm"
+                            )}
+                          </span>
                         ) : (
-                          <span>MM/DD/YYYY HH:mm</span>
+                          "TBA"
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -387,16 +495,44 @@ export default function create() {
                 </FormItem>
               )}
             />
+            {fixture && (
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel className="font-bold">Status</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={fixture?.status}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="active" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Active</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="draft" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Draft</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormDescription>
+                      <strong>Drafts</strong> are not visible to users on your
+                      app.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <Button type="submit" className="w-full disabled:bg-pink-400">
-              Publish
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSaveDraft}
-              variant="outline"
-              className="w-full disabled:bg-pink-400"
-            >
-              Save as draft
+              Update
             </Button>
             <Link href="/dashboard/fixtures-and-results">
               <Button variant="ghost" className="w-full disabled:bg-pink-400">

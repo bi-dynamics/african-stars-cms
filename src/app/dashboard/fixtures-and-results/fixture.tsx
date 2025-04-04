@@ -1,3 +1,5 @@
+"use client";
+
 import { TableCell, TableRow } from "@/components/ui/table";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +13,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
-import { DocumentReference, getDoc } from "firebase/firestore";
+import { doc, getDoc, Timestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Fixtures } from "@/lib/Fixtures/definitions";
+import { db } from "@/app/firebase/config";
 
 interface FixtureProps {
   fixture: Fixtures;
@@ -30,13 +33,31 @@ export default function Fixture({ fixture, onDelete }: FixtureProps) {
     logo: string;
   } | null>(null);
 
+  let displayDate: string = "Invalid Date";
+
+  if (fixture.match_date) {
+    if (fixture.match_date instanceof Timestamp) {
+      // Convert Timestamp to Date
+      const date = fixture.match_date.toDate();
+      displayDate = date.toLocaleString();
+    } else {
+      // Handle cases where match_date is not a Timestamp
+      displayDate = "Invalid Format";
+    }
+  } else {
+    // Handle cases where match_date is undefined or null
+    displayDate = "Date TBA";
+  }
+
   useEffect(() => {
+    //get individual team documents for the fixture
     const fetchTeamData = async (
-      teamId: DocumentReference,
+      teamId: string,
       setTeamData: (data: { name: string; logo: string } | null) => void
     ) => {
       try {
-        const teamDoc = await getDoc(teamId);
+        const teamDocRef = doc(db, `teams/${teamId}`);
+        const teamDoc = await getDoc(teamDocRef);
         if (teamDoc.exists()) {
           setTeamData({
             name: teamDoc.data().name,
@@ -104,7 +125,11 @@ export default function Fixture({ fixture, onDelete }: FixtureProps) {
           </>
         )}
       </TableCell>
-      <TableCell className="font-medium">14/02/2025</TableCell>
+      <TableCell className="font-medium">
+        <Badge variant="outline" className="capitalize">
+          {displayDate}
+        </Badge>
+      </TableCell>
       <TableCell>
         <Badge variant="outline" className="capitalize">
           {fixture.status}
@@ -122,7 +147,7 @@ export default function Fixture({ fixture, onDelete }: FixtureProps) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem>Mobile Preview</DropdownMenuItem>
-            <Link href={`/dashboard/fixtures/${fixture.id}`}>
+            <Link href={`/dashboard/fixtures-and-results/${fixture.id}`}>
               <DropdownMenuItem>Edit</DropdownMenuItem>
             </Link>
             <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>

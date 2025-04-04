@@ -24,7 +24,7 @@ export async function createTeam(formData: FormData): Promise<void> {
     //handle image upload
     if (image instanceof File) {
       const uniqueFileName = `${v4()}-${image.name}`;
-      const storageRef = ref(storage, `news/${uniqueFileName}`);
+      const storageRef = ref(storage, `teams/${uniqueFileName}`);
       await uploadBytes(storageRef, image as Blob);
       imageUrl = await getDownloadURL(storageRef);
     }

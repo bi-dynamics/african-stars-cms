@@ -59,7 +59,7 @@ export default function FixturesTable() {
       // Check for hasPrevious and hasMore based on the number of articles fetched
 
       setHasPrevious(currentPage > 1);
-      setHasMore(fixtures.length === 5);
+      setHasMore(fixtures.length === 10);
     } else {
       console.error("Featured news returned undefined");
     }
