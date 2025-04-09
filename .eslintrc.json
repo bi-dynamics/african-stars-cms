@@ -7,8 +7,7 @@
     "plugin:react-hooks/recommended" // React Hooks rules
   ],
   "plugins": [
-    "react",
-    "react-hooks"
+    "react"
   ],
   "rules": {
     "react/prop-types": "off", // Disable prop-types, as we use TypeScript
