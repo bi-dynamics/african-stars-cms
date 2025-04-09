@@ -64,14 +64,6 @@ export async function getFixtures(
           leg: data.match_info.leg,
         },
         status: data.status,
-        home_team: {
-          name: "",
-          logo: "",
-        },
-        away_team: {
-          name: "",
-          logo: "",
-        },
       });
     });
 

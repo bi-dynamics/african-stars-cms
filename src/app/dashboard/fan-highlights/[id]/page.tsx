@@ -17,11 +17,9 @@ import { updateFanHighlights } from "@/lib/FanHighlights/actions";
 import { getFanHighlight } from "@/lib/FanHighlights/data";
 import { FanHighlights } from "@/lib/FanHighlights/definitions";
 import { getErrorMessage } from "@/lib/utils";
-
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DocumentData } from "firebase/firestore";
 import Link from "next/link";
-import { notFound, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";

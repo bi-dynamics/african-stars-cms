@@ -38,7 +38,7 @@ export default function TeamsTable() {
 
     setIsLoading(true);
 
-    let teams = await getTeams();
+    const teams = await getTeams();
 
     if (teams !== undefined) {
       setTeams(teams);
@@ -60,7 +60,7 @@ export default function TeamsTable() {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error("An unexpected error occured.");
+      toast.error("An unexpected error occured. " + error);
     }
   };
 

@@ -73,7 +73,7 @@ export default function Highlight({ highlight, onDelete }: HighlightProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Mobile Preview</DropdownMenuItem>
+
             <Link href={`/dashboard/fan-highlights/${highlight.id}`}>
               <DropdownMenuItem>Edit</DropdownMenuItem>
             </Link>

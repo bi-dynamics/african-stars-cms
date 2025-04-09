@@ -2,14 +2,6 @@ import { DocumentReference, Timestamp } from "firebase/firestore";
 
 export interface Fixtures {
   id: string;
-  home_team: {
-    name: string;
-    logo: string;
-  };
-  away_team: {
-    name: string;
-    logo: string;
-  };
   away_team_id: string;
   home_team_id: string;
   scores?: {

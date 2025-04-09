@@ -54,7 +54,7 @@ export default function Article({ article, onDelete }: ArticleProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Mobile Preview</DropdownMenuItem>
+
             <Link href={`/dashboard/featured-news/${article.id}`}>
               <DropdownMenuItem>Edit</DropdownMenuItem>
             </Link>

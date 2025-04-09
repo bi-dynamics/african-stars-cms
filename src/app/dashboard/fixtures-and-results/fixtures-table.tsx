@@ -90,7 +90,7 @@ export default function FixturesTable() {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error("An unexpected error occured.");
+      toast.error("An unexpected error occured. " + error);
     }
   };
 

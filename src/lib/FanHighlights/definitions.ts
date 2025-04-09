@@ -6,3 +6,8 @@ export interface FanHighlights {
   src: string;
   status: "active" | "draft";
 }
+
+export interface updateFanHighlightsType {
+  src?: string;
+  status?: "active" | "draft";
+}

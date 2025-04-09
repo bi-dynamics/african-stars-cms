@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createFeaturedNews } from "@/lib/FeaturedNews/actions";
 import { toast } from "sonner";

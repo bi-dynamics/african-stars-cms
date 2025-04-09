@@ -1,6 +1,5 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -45,7 +44,7 @@ export default function Team({ team, onDelete }: TeamProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Mobile Preview</DropdownMenuItem>
+
             <Link href={`/dashboard/teams/${team.id}`}>
               <DropdownMenuItem>Edit</DropdownMenuItem>
             </Link>

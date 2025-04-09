@@ -1,5 +1,4 @@
 "use client";
-import { signOut } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { redirect } from "next/navigation";

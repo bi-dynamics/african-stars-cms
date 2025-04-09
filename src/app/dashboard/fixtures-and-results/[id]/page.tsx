@@ -191,7 +191,7 @@ export default function page({ params }: { params: { id: string } }) {
 
   function handleTimeChange(type: "hour" | "minute", value: string) {
     const currentDate = form.getValues("match_date") || new Date();
-    let newDate = new Date(currentDate);
+    const newDate = new Date(currentDate);
 
     if (type === "hour") {
       const hour = parseInt(value, 10);
@@ -284,7 +284,7 @@ export default function page({ params }: { params: { id: string } }) {
                           />
                         </SelectTrigger>
                       </FormControl>
-                      {fixture?.home_team?.name}
+
                       <SelectContent>
                         {teams.map((team) => (
                           <SelectItem
@@ -364,7 +364,7 @@ export default function page({ params }: { params: { id: string } }) {
                           />
                         </SelectTrigger>
                       </FormControl>
-                      {fixture?.away_team?.name}
+
                       <SelectContent>
                         {teams.map((team) => (
                           <SelectItem

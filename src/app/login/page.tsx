@@ -29,7 +29,7 @@ const formSchema = z.object({
 
 export default function page() {
   const router = useRouter();
-  const [signInWithEmailAndPassword, user, loading, error] =
+  const [signInWithEmailAndPassword, user, , error] =
     useSignInWithEmailAndPassword(auth);
 
   const form = useForm<z.infer<typeof formSchema>>({

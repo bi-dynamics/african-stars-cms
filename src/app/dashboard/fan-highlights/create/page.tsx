@@ -20,8 +20,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createFanHighlights } from "@/lib/FanHighlights/actions";
 import { toast } from "sonner";
@@ -33,8 +31,6 @@ const formSchema = z.object({
 });
 
 export default function create() {
-  const router = useRouter();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

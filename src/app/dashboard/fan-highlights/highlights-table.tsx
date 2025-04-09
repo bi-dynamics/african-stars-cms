@@ -20,15 +20,12 @@ import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-
 import Highlight from "./highlight";
 import { FanHighlights } from "@/lib/FanHighlights/definitions";
 import { getFanHighlights } from "@/lib/FanHighlights/data";
 import { deleteFanHighlight } from "@/lib/FanHighlights/actions";
 
 export default function HighlightsTable() {
-  const router = useRouter();
   const [fanHighlights, setFanHighlights] = useState<FanHighlights[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true); // Track if there are more pages

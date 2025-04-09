@@ -17,17 +17,14 @@ import {
 } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import Article from "./article";
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { getFeaturedNews } from "@/lib/FeaturedNews/data";
 import { deleteFeaturedNews } from "@/lib/FeaturedNews/actions";
 import { FeaturedNews } from "@/lib/FeaturedNews/definitions";
 
 export default function NewsTable() {
-  const router = useRouter();
   const [featuredNews, setFeaturedNews] = useState<FeaturedNews[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true); // Track if there are more pages

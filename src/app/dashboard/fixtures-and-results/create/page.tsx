@@ -135,7 +135,7 @@ export default function create() {
 
   function handleTimeChange(type: "hour" | "minute", value: string) {
     const currentDate = form.getValues("match_date") || new Date();
-    let newDate = new Date(currentDate);
+    const newDate = new Date(currentDate);
 
     if (type === "hour") {
       const hour = parseInt(value, 10);

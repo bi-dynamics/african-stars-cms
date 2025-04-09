@@ -146,7 +146,6 @@ export default function Fixture({ fixture, onDelete }: FixtureProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Mobile Preview</DropdownMenuItem>
             <Link href={`/dashboard/fixtures-and-results/${fixture.id}`}>
               <DropdownMenuItem>Edit</DropdownMenuItem>
             </Link>

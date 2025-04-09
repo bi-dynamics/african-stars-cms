@@ -12,6 +12,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getErrorMessage } from "../utils";
+import { updateFanHighlightsType } from "./definitions";
 
 export async function createFanHighlights(formData: FormData) {
   try {
@@ -41,15 +42,17 @@ export async function createFanHighlights(formData: FormData) {
   redirect("/dashboard/fan-highlights");
 }
 
+type FanHighlightsStatus = "active" | "draft";
 export async function updateFanHighlights(
   id: string,
   formData: FormData
 ): Promise<void> {
   try {
     const data = Object.fromEntries(formData);
-    const { src, status } = data;
+    const status = data.status as FanHighlightsStatus;
+    const src = data.src as string;
 
-    const updateData: any = {}; // Create an object to store updated fields
+    const updateData: updateFanHighlightsType = {}; // Create an object to store updated fields
 
     if (src) {
       //Replace "watch?v=" with "embed" in the src URL

@@ -15,15 +15,11 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { notFound, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { useEffect, useState } from "react";
-import { DocumentData } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Teams } from "@/lib/Teams/definitions";
 import { getTeam } from "@/lib/Teams/data";
 import { updateTeam } from "@/lib/Teams/actions";
