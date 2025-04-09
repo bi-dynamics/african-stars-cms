@@ -14,24 +14,24 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { doc, getDoc, Timestamp } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Fixtures } from "@/lib/Fixtures/definitions";
 import { db } from "@/app/firebase/config";
 
 interface FixtureProps {
   fixture: Fixtures;
+  // eslint-disable-next-line no-unused-vars
   onDelete: (id: string) => void;
 }
 
+interface Team {
+  name: string;
+  logo: string;
+}
+
 export default function Fixture({ fixture, onDelete }: FixtureProps) {
-  const [homeTeamData, setHomeTeamData] = useState<{
-    name: string;
-    logo: string;
-  } | null>(null);
-  const [awayTeamData, setAwayTeamData] = useState<{
-    name: string;
-    logo: string;
-  } | null>(null);
+  const [homeTeamData, setHomeTeamData] = useState<Team | null>(null);
+  const [awayTeamData, setAwayTeamData] = useState<Team | null>(null);
 
   let displayDate: string = "Invalid Date";
 
@@ -49,12 +49,11 @@ export default function Fixture({ fixture, onDelete }: FixtureProps) {
     displayDate = "Date TBA";
   }
 
+  type TeamSetter = Dispatch<SetStateAction<Team | null>>;
+
   useEffect(() => {
     //get individual team documents for the fixture
-    const fetchTeamData = async (
-      teamId: string,
-      setTeamData: (data: { name: string; logo: string } | null) => void
-    ) => {
+    const fetchTeamData = async (teamId: string, setTeamData: TeamSetter) => {
       try {
         const teamDocRef = doc(db, `teams/${teamId}`);
         const teamDoc = await getDoc(teamDocRef);

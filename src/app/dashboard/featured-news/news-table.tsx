@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import Article from "./article";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { getFeaturedNews } from "@/lib/FeaturedNews/data";
@@ -28,55 +28,50 @@ export default function NewsTable() {
   const [featuredNews, setFeaturedNews] = useState<FeaturedNews[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true); // Track if there are more pages
-  const [hasPrevious, setHasPrevious] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const hasPrevious = currentPage > 1;
   const [refresh, setRefresh] = useState(false);
+
+  const fetchArticles = useCallback(
+    async (nextPage: boolean = false, prevPage: boolean = false) => {
+      setIsLoading(true);
+
+      let articles;
+      if (nextPage) {
+        articles = await getFeaturedNews(nextPage, false);
+      } else if (prevPage) {
+        articles = await getFeaturedNews(false, prevPage);
+      } else {
+        articles = await getFeaturedNews();
+      }
+      if (articles !== undefined) {
+        setFeaturedNews(articles); // replace existing articles with new ones
+
+        // Check for hasPrevious and hasMore based on the number of articles fetched
+        setHasMore(articles.length === 5);
+      } else {
+        console.error("Featured news returned undefined");
+      }
+
+      setIsLoading(false);
+    },
+    [setIsLoading]
+  );
 
   useEffect(() => {
     fetchArticles();
-  }, [refresh]);
-
-  const fetchArticles = async (
-    nextPage: boolean = false,
-    prevPage: boolean = false,
-    currentPage: number = 1
-  ) => {
-    if (isLoading) return;
-
-    setIsLoading(true);
-
-    let articles;
-    if (nextPage) {
-      articles = await getFeaturedNews(nextPage, false);
-    } else if (prevPage) {
-      articles = await getFeaturedNews(false, prevPage);
-    } else {
-      articles = await getFeaturedNews();
-    }
-    if (articles !== undefined) {
-      setFeaturedNews(articles); // replace existing articles with new ones
-
-      // Check for hasPrevious and hasMore based on the number of articles fetched
-      console.log("currentpage for fetch" + currentPage);
-      setHasPrevious(currentPage > 1);
-      setHasMore(articles.length === 5);
-    } else {
-      console.error("Featured news returned undefined");
-    }
-
-    setIsLoading(false);
-  };
+  }, [refresh, fetchArticles]);
 
   const loadMoreArticles = async () => {
     const newCurrentPage = currentPage + 1;
     setCurrentPage(newCurrentPage);
-    fetchArticles(true, false, newCurrentPage);
+    fetchArticles(true, false);
   };
 
   const loadPreviousArticles = async () => {
     const newCurrentPage = currentPage - 1;
     setCurrentPage(newCurrentPage);
-    fetchArticles(false, true, newCurrentPage);
+    fetchArticles(false, true);
   };
 
   const handleDeleteFeaturedNews = async (id: string) => {

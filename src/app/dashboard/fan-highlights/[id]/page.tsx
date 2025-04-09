@@ -37,7 +37,7 @@ const formSchema = z.object({
   status: z.enum(["active", "draft"]).optional(),
 });
 
-export default function edit({ params }: { params: { id: string } }) {
+export default function Edit({ params }: { params: { id: string } }) {
   const { id } = params;
   const [highlight, setHighlight] = useState<FanHighlights | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);

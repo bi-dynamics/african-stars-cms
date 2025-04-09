@@ -37,7 +37,7 @@ const formSchema = z.object({
   name: z.string().min(1, "Team name is required").optional(),
 });
 
-export default function edit({ params }: { params: { id: string } }) {
+export default function Edit({ params }: { params: { id: string } }) {
   const { id } = params;
   const [team, setTeam] = useState<Teams | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);
@@ -124,6 +124,7 @@ export default function edit({ params }: { params: { id: string } }) {
             <FormField
               control={form.control}
               name="image"
+              // eslint-disable-next-line no-unused-vars
               render={({ field: { value, onChange, ...fieldProps } }) => (
                 <FormItem>
                   <FormLabel className="font-bold">Team Logo</FormLabel>

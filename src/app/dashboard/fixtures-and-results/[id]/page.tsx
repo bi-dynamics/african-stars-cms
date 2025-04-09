@@ -59,7 +59,7 @@ const formSchema = z.object({
   status: z.enum(["active", "draft"]).optional(),
 });
 
-export default function page({ params }: { params: { id: string } }) {
+export default function Page({ params }: { params: { id: string } }) {
   const { id } = params;
   const [fixture, setFixture] = useState<Fixtures | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);

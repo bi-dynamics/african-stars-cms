@@ -13,29 +13,27 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { v4 } from "uuid";
 import { getErrorMessage } from "../utils";
+import { updateTeamsType } from "./definitions";
 
 export async function createTeam(formData: FormData): Promise<void> {
-  try {
-    const data = Object.fromEntries(formData);
-    const { name, image } = data;
+  const data = Object.fromEntries(formData);
+  const { name, image } = data;
 
-    let imageUrl: string | undefined = undefined;
+  let imageUrl: string | undefined = undefined;
 
-    //handle image upload
-    if (image instanceof File) {
-      const uniqueFileName = `${v4()}-${image.name}`;
-      const storageRef = ref(storage, `teams/${uniqueFileName}`);
-      await uploadBytes(storageRef, image as Blob);
-      imageUrl = await getDownloadURL(storageRef);
-    }
-
-    await addDoc(collection(db, "teams"), {
-      name,
-      image_url: imageUrl ?? "",
-    });
-  } catch (error) {
-    throw error;
+  //handle image upload
+  if (image instanceof File) {
+    const uniqueFileName = `${v4()}-${image.name}`;
+    const storageRef = ref(storage, `teams/${uniqueFileName}`);
+    await uploadBytes(storageRef, image as Blob);
+    imageUrl = await getDownloadURL(storageRef);
   }
+
+  await addDoc(collection(db, "teams"), {
+    name,
+    image_url: imageUrl ?? "",
+  });
+
   revalidatePath("/dashboard/teams");
   redirect("/dashboard/teams");
 }
@@ -44,31 +42,28 @@ export async function updateTeam(
   id: string,
   formData: FormData
 ): Promise<void> {
-  try {
-    const data = Object.fromEntries(formData);
-    const { name, image } = data;
+  const data = Object.fromEntries(formData);
+  const name = data.name as string;
+  const image = data.image as File;
 
-    const updateData: any = {};
+  const updateData: updateTeamsType = {};
 
-    if (name) {
-      updateData.name = name;
-    }
+  if (name) {
+    updateData.name = name;
+  }
 
-    if (image && image instanceof File) {
-      const uniqueFileName = `${v4()}-${image.name}`;
-      const storageRef = ref(storage, `teams/${uniqueFileName}`);
-      await uploadBytes(storageRef, image as Blob);
-      updateData.image_url = await getDownloadURL(storageRef);
-    }
+  if (image && image instanceof File) {
+    const uniqueFileName = `${v4()}-${image.name}`;
+    const storageRef = ref(storage, `teams/${uniqueFileName}`);
+    await uploadBytes(storageRef, image as Blob);
+    updateData.image_url = await getDownloadURL(storageRef);
+  }
 
-    if (Object.keys(updateData).length > 0) {
-      // Only update if there are changes
-      await updateDoc(doc(db, "teams", id), {
-        ...updateData,
-      });
-    }
-  } catch (error) {
-    throw error;
+  if (Object.keys(updateData).length > 0) {
+    // Only update if there are changes
+    await updateDoc(doc(db, "teams", id), {
+      ...updateData,
+    });
   }
 
   revalidatePath("/dashboard/teams");

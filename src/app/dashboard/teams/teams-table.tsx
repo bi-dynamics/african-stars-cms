@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { PlusCircle } from "lucide-react";
 import Team from "./team";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { getTeams } from "@/lib/Teams/data";
@@ -29,13 +29,7 @@ export default function TeamsTable() {
   const [isLoading, setIsLoading] = useState(false);
   const [refresh, setRefresh] = useState(false);
 
-  useEffect(() => {
-    fetchTeams();
-  }, [refresh]);
-
-  const fetchTeams = async () => {
-    if (isLoading) return;
-
+  const fetchTeams = useCallback(async () => {
     setIsLoading(true);
 
     const teams = await getTeams();
@@ -47,7 +41,11 @@ export default function TeamsTable() {
     }
 
     setIsLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchTeams();
+  }, [refresh, fetchTeams]);
 
   const handleDeleteTeam = async (id: string) => {
     toast.info("Deleting team");
@@ -90,6 +88,7 @@ export default function TeamsTable() {
               </TableHead>
             </TableRow>
           </TableHeader>
+          {isLoading && <p>Loading</p>}
           <TableBody>
             {teams.map((team) => (
               <Team key={team.id} team={team} onDelete={handleDeleteTeam} />

@@ -27,7 +27,7 @@ const formSchema = z.object({
   password: z.string().min(3, "Please enter a password."),
 });
 
-export default function page() {
+export default function Page() {
   const router = useRouter();
   const [signInWithEmailAndPassword, user, , error] =
     useSignInWithEmailAndPassword(auth);

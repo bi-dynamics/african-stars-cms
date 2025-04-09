@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import Highlight from "./highlight";
@@ -29,55 +29,50 @@ export default function HighlightsTable() {
   const [fanHighlights, setFanHighlights] = useState<FanHighlights[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true); // Track if there are more pages
-  const [hasPrevious, setHasPrevious] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const hasPrevious = currentPage > 1;
   const [refresh, setRefresh] = useState(false);
+
+  const fetchHighlights = useCallback(
+    async (nextPage: boolean = false, prevPage: boolean = false) => {
+      setIsLoading(true);
+
+      let data;
+      if (nextPage) {
+        data = await getFanHighlights(nextPage, false);
+      } else if (prevPage) {
+        data = await getFanHighlights(false, prevPage);
+      } else {
+        data = await getFanHighlights();
+      }
+      if (data !== undefined) {
+        setFanHighlights(data); // replace existing articles with new ones
+
+        // Check for hasMore based on the number of articles fetched
+        setHasMore(data.length === 5);
+      } else {
+        console.error("Featured news returned undefined");
+      }
+
+      setIsLoading(false);
+    },
+    [setIsLoading]
+  );
 
   useEffect(() => {
     fetchHighlights();
-  }, [refresh]);
-
-  const fetchHighlights = async (
-    nextPage: boolean = false,
-    prevPage: boolean = false,
-    currentPage: number = 1
-  ) => {
-    if (isLoading) return;
-
-    setIsLoading(true);
-
-    let data;
-    if (nextPage) {
-      data = await getFanHighlights(nextPage, false);
-    } else if (prevPage) {
-      data = await getFanHighlights(false, prevPage);
-    } else {
-      data = await getFanHighlights();
-    }
-    if (data !== undefined) {
-      setFanHighlights(data); // replace existing articles with new ones
-
-      // Check for hasPrevious and hasMore based on the number of articles fetched
-      console.log("currentpage for fetch" + currentPage);
-      setHasPrevious(currentPage > 1);
-      setHasMore(data.length === 5);
-    } else {
-      console.error("Featured news returned undefined");
-    }
-
-    setIsLoading(false);
-  };
+  }, [refresh, fetchHighlights]);
 
   const loadMoreHighlights = async () => {
     const newCurrentPage = currentPage + 1;
     setCurrentPage(newCurrentPage);
-    fetchHighlights(true, false, newCurrentPage);
+    fetchHighlights(true, false);
   };
 
   const loadPreviousHighlights = async () => {
     const newCurrentPage = currentPage - 1;
     setCurrentPage(newCurrentPage);
-    fetchHighlights(false, true, newCurrentPage);
+    fetchHighlights(false, true);
   };
 
   const handleDeleteFanHighlight = async (id: string) => {
@@ -129,7 +124,7 @@ export default function HighlightsTable() {
               <TableRow className="border w-full">
                 <TableCell colSpan={5}>
                   No fan highlights available. Get started by clicking{" "}
-                  <strong>'Add New Video'</strong>
+                  <strong>&apos;Add New Video&apos;</strong>
                 </TableCell>
               </TableRow>
             )}

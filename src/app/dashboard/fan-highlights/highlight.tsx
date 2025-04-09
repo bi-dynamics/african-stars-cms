@@ -16,6 +16,7 @@ import { FanHighlights } from "@/lib/FanHighlights/definitions";
 
 interface HighlightProps {
   highlight: FanHighlights;
+  // eslint-disable-next-line no-unused-vars
   onDelete: (id: string) => void;
 }
 export default function Highlight({ highlight, onDelete }: HighlightProps) {
@@ -42,7 +43,8 @@ export default function Highlight({ highlight, onDelete }: HighlightProps) {
   }, [highlight.src]);
 
   const handleDelete = () => {
-    onDelete(highlight.id);
+    const id = highlight.id;
+    onDelete(id);
   };
   return (
     <TableRow>

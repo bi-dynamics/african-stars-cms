@@ -15,6 +15,7 @@ import { FeaturedNews } from "@/lib/FeaturedNews/definitions";
 
 interface ArticleProps {
   article: FeaturedNews;
+  // eslint-disable-next-line no-unused-vars
   onDelete: (id: string) => void;
 }
 

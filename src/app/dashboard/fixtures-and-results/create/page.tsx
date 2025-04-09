@@ -55,7 +55,7 @@ const formSchema = z.object({
   status: z.enum(["active", "draft"]),
 });
 
-export default function create() {
+export default function Create() {
   const [teams, setTeams] = useState<Teams[]>([]);
 
   useEffect(() => {

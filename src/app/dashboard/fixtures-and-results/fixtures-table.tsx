@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import Fixture from "./fixture";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { deleteFixture } from "@/lib/Fixtures/actions";
@@ -28,55 +28,51 @@ export default function FixturesTable() {
   const [fixtures, setFixtures] = useState<Fixtures[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true); // Track if there are more pages
-  const [hasPrevious, setHasPrevious] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const hasPrevious = currentPage > 1;
   const [refresh, setRefresh] = useState(false);
+
+  const fetchFixtures = useCallback(
+    async (nextPage: boolean = false, prevPage: boolean = false) => {
+      setIsLoading(true);
+
+      let fixtures;
+      if (nextPage) {
+        fixtures = await getFixtures(nextPage, false);
+      } else if (prevPage) {
+        fixtures = await getFixtures(false, prevPage);
+      } else {
+        fixtures = await getFixtures();
+      }
+      if (fixtures !== undefined) {
+        setFixtures(fixtures); // replace existing articles with new ones
+
+        // Check for hasPrevious and hasMore based on the number of articles fetched
+
+        setHasMore(fixtures.length === 10);
+      } else {
+        console.error("Featured news returned undefined");
+      }
+
+      setIsLoading(false);
+    },
+    [setIsLoading]
+  );
 
   useEffect(() => {
     fetchFixtures();
-  }, [refresh]);
-
-  const fetchFixtures = async (
-    nextPage: boolean = false,
-    prevPage: boolean = false,
-    currentPage: number = 1
-  ) => {
-    if (isLoading) return;
-
-    setIsLoading(true);
-
-    let fixtures;
-    if (nextPage) {
-      fixtures = await getFixtures(nextPage, false);
-    } else if (prevPage) {
-      fixtures = await getFixtures(false, prevPage);
-    } else {
-      fixtures = await getFixtures();
-    }
-    if (fixtures !== undefined) {
-      setFixtures(fixtures); // replace existing articles with new ones
-
-      // Check for hasPrevious and hasMore based on the number of articles fetched
-
-      setHasPrevious(currentPage > 1);
-      setHasMore(fixtures.length === 10);
-    } else {
-      console.error("Featured news returned undefined");
-    }
-
-    setIsLoading(false);
-  };
+  }, [refresh, fetchFixtures]);
 
   const loadMoreFixtures = async () => {
     const newCurrentPage = currentPage + 1;
     setCurrentPage(newCurrentPage);
-    fetchFixtures(true, false, newCurrentPage);
+    fetchFixtures(true, false);
   };
 
   const loadPreviousFixtures = async () => {
     const newCurrentPage = currentPage - 1;
     setCurrentPage(newCurrentPage);
-    fetchFixtures(false, true, newCurrentPage);
+    fetchFixtures(false, true);
   };
 
   const handleDeleteFixture = async (id: string) => {

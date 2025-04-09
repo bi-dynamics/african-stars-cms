@@ -2,7 +2,7 @@
 import { auth } from "@/app/firebase/config";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { redirect } from "next/navigation";
-export default function page() {
+export default function Page() {
   const [user] = useAuthState(auth);
   if (!user) {
     redirect("/login");

@@ -14,6 +14,7 @@ import { Teams } from "@/lib/Teams/definitions";
 
 interface TeamProps {
   team: Teams;
+  // eslint-disable-next-line no-unused-vars
   onDelete: (id: string) => void;
 }
 export default function Team({ team, onDelete }: TeamProps) {

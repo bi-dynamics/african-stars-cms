@@ -30,7 +30,7 @@ const formSchema = z.object({
   name: z.string().min(1, "Team name is required"),
 });
 
-export default function create() {
+export default function Create() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,6 +84,7 @@ export default function create() {
             <FormField
               control={form.control}
               name="image"
+              // eslint-disable-next-line no-unused-vars
               render={({ field: { value, onChange, ...fieldProps } }) => (
                 <FormItem>
                   <FormLabel className="font-bold">Team Logo</FormLabel>

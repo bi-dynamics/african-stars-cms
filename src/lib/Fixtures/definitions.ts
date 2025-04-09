@@ -1,4 +1,4 @@
-import { DocumentReference, Timestamp } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
 
 export interface Fixtures {
   id: string;
@@ -15,4 +15,20 @@ export interface Fixtures {
     leg: string;
   };
   status: "active" | "draft";
+}
+
+export interface updateFixtures {
+  away_team_id?: string;
+  home_team_id?: string;
+  scores?: {
+    home?: number;
+    away?: number;
+  };
+  match_date?: Timestamp;
+  match_info?: {
+    competitionStage?: string;
+    league?: string;
+    leg?: string;
+  };
+  status?: "active" | "draft";
 }

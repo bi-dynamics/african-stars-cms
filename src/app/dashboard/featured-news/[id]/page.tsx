@@ -51,7 +51,7 @@ const formSchema = z.object({
   status: z.enum(["active", "draft"]).optional(),
 });
 
-export default function edit({ params }: { params: { id: string } }) {
+export default function Edit({ params }: { params: { id: string } }) {
   const { id } = params;
   const [article, setArticle] = useState<FeaturedNews | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);
@@ -162,6 +162,7 @@ export default function edit({ params }: { params: { id: string } }) {
             <FormField
               control={form.control}
               name="picture"
+              // eslint-disable-next-line no-unused-vars
               render={({ field: { value, onChange, ...fieldProps } }) => (
                 <FormItem>
                   <FormLabel className="font-bold">Picture</FormLabel>

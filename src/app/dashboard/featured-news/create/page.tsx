@@ -33,7 +33,7 @@ const formSchema = z.object({
   status: z.enum(["active", "draft"]),
 });
 
-export default function create() {
+export default function Create() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -116,6 +116,7 @@ export default function create() {
             <FormField
               control={form.control}
               name="picture"
+              // eslint-disable-next-line no-unused-vars
               render={({ field: { value, onChange, ...fieldProps } }) => (
                 <FormItem>
                   <FormLabel className="font-bold">Picture</FormLabel>
