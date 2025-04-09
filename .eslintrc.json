@@ -1,3 +1,22 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"]
+  "extends": [
+    "next/core-web-vitals",
+    "next/typescript",
+    "eslint:recommended", // Add basic recommended rules
+    "plugin:react/recommended", // React rules
+    "plugin:react-hooks/recommended" // React Hooks rules
+  ],
+  "plugins": [
+    "react",
+    "react-hooks"
+  ],
+  "rules": {
+    "react/prop-types": "off", // Disable prop-types, as we use TypeScript
+    "react/react-in-jsx-scope": "off" // Next.js handles React import
+  },
+  "settings": {
+    "react": {
+      "version": "detect" // Automatically detect React version
+    }
+  }
 }
