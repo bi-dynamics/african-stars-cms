@@ -25,7 +25,8 @@ export async function createFeaturedNews(formData: FormData) {
   // handle image upload
   if (picture instanceof File) {
     //Reference to location to store image
-    const storageRef = ref(storage, `news/${picture.name}`);
+    const uniqueFileName = `${v4()}-${picture.name}`;
+    const storageRef = ref(storage, `news/${uniqueFileName}`);
     await uploadBytes(storageRef, picture as Blob);
     imageUrl = await getDownloadURL(storageRef);
   }

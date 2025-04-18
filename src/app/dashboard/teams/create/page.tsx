@@ -40,13 +40,11 @@ export default function Create() {
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log({ values });
     const formData = new FormData();
     formData.append("name", values.name);
     if (values.image) {
       formData.append("picture", values.image);
     }
-
     try {
       await createTeam(formData);
       toast.success("New team created");
